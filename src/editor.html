@@ -885,19 +885,19 @@
 				clearHtmlIfTextIsEmpty('zss_editor_content');
 
 				$(document).on('selectionchange',function(e){
-					console.log('selectionchange');
-					zss_editor.calculateEditorHeightWithCaretPosition();
-					zss_editor.setScrollPosition();
-					zss_editor.enabledEditingItems(e);
-					notifyIfSelectedTextHasChanged();
+					// console.log('selectionchange');
+					// zss_editor.calculateEditorHeightWithCaretPosition();
+					// zss_editor.setScrollPosition();
+					// zss_editor.enabledEditingItems(e);
+					// notifyIfSelectedTextHasChanged();
 				});
 
 				// Make sure that when we tap anywhere in the document we focus on the editor
 				$(window).on('touchmove', function(e) {
-					zss_editor.isDragging = true;
-					zss_editor.updateScrollOffset = true;
-					zss_editor.setScrollPosition();
-					zss_editor.enabledEditingItems(e);
+					// zss_editor.isDragging = true;
+					// zss_editor.updateScrollOffset = true;
+					// zss_editor.setScrollPosition();
+					// zss_editor.enabledEditingItems(e);
 				});
 				$(window).on('touchstart', function(e) {
 					zss_editor.isDragging = false;
