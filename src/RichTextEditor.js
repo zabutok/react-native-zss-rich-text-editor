@@ -400,6 +400,10 @@ export default class RichTextEditor extends Component {
     this._sendAction(actions.fontSize,size)
   }
 
+  insertHR(attributes) {
+    this._sendAction(actions.insertHR, attributes);
+  }
+
   font(font) {
     this._sendAction(actions.font, font)
   }

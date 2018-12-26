@@ -1104,6 +1104,10 @@
 				zss_editor.enabledEditingItems();
 			}
 
+			zss_editor.insertHR = function(attributes) {
+				zss_editor.insertHTML('<th/>');
+			}
+
 			zss_editor.setSuperscript = function() {
 				document.execCommand('superscript', false, null);
 				zss_editor.enabledEditingItems();

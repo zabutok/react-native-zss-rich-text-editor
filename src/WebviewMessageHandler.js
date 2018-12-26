@@ -22,6 +22,9 @@ export const InjectedMessageHandler = `
         case '${actions.showTitle}':
           zss_editor.showTitle(action.data);
           break;
+        case '${actions.insertHR}':
+          zss_editor.insertHR(action.data);
+          break;
         case '${actions.setContentHtml}':
           zss_editor.setContentHTML(action.data);
           break;
