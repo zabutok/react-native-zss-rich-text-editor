@@ -21,6 +21,7 @@ function getDefaultIcon() {
   texts[actions.insertOrderedList] = require('../img/icon_format_ol.png');
   texts[actions.insertLink] = require('../img/icon_format_link.png');
   texts[actions.undo] = require('../img/icon_format_undo.png');
+  texts[actions.redo] = require('../img/icon_format_redo.png');
   texts[actions.insertHR] = require('../img/icon_format_lb.png');
   return texts;
 }
