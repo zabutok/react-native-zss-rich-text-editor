@@ -15,8 +15,8 @@ const defaultActions = [
 function getDefaultIcon() {
   const texts = {};
   texts[actions.insertImage] = require('../img/icon_format_media.png');
-  texts[actions.setBold] = require('../img/icon_format_bold.png');
-  texts[actions.setItalic] = require('../img/icon_format_italic.png');
+  texts[actions.setBold] = require('../img/B.png');
+  texts[actions.setItalic] = require('../img/I.png');
   texts[actions.insertBulletsList] = require('../img/icon_format_ul.png');
   texts[actions.insertOrderedList] = require('../img/icon_format_ol.png');
   texts[actions.insertLink] = require('../img/icon_format_link.png');
@@ -106,12 +106,12 @@ export default class RichTextToolbar extends Component {
     const icon = this._getButtonIcon(action);
     return (
       <TouchableOpacity
-          key={action}
-          style={[
-            {height: 50, width: 50, justifyContent: 'center'},
-            selected ? this._getButtonSelectedStyle() : this._getButtonUnselectedStyle()
-          ]}
-          onPress={() => this._onPress(action)}
+        key={action}
+        style={[
+          {height: '100%', flex: 1, justifyContent:'center',alignItems: 'center'},
+          selected ? this._getButtonSelectedStyle() : this._getButtonUnselectedStyle()
+        ]}
+        onPress={() => this._onPress(action)}
       >
         {icon ? <Image source={icon} style={{tintColor: selected ? this.props.selectedIconTint : this.props.iconTint}}/> : null}
       </TouchableOpacity>
@@ -120,20 +120,20 @@ export default class RichTextToolbar extends Component {
 
   _renderAction(action, selected) {
     return this.props.renderAction ?
-        this.props.renderAction(action, selected) :
-        this._defaultRenderAction(action, selected);
+      this.props.renderAction(action, selected) :
+      this._defaultRenderAction(action, selected);
   }
 
   render() {
     return (
       <View
-          style={[{height: 50, backgroundColor: '#D3D3D3', alignItems: 'center'}, this.props.style]}
+        style={[{height: 50, backgroundColor: '#D3D3D3', alignItems: 'center'}, this.props.style]}
       >
         <ListView
-            horizontal
-            contentContainerStyle={{flexDirection: 'row'}}
-            dataSource={this.state.ds}
-            renderRow= {(row) => this._renderAction(row.action, row.selected)}
+          horizontal
+          contentContainerStyle={{flexDirection: 'row',flex: 1, justifyContent:'center'}}
+          dataSource={this.state.ds}
+          renderRow= {(row) => this._renderAction(row.action, row.selected)}
         />
       </View>
     );
