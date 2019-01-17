@@ -184,6 +184,7 @@ export default class RichTextEditor extends Component {
         }
         case messages.CONTENT_CHANGE: {
           const content = message.data.content;
+          PlatformIOS && this.setEditorAvailableHeightBasedOnKeyboardHeight(this.state.keyboardHeight);
           this.state.onChange.map((listener) => listener(content));
           break;
         }
