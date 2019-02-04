@@ -1470,7 +1470,6 @@
 				var h = document.getElementById(editorId).innerHTML;
 				if(!document.getElementById(editorId).childNodes[0].tagName) {
 					var paragraph = document.createElement('p');
-					//alert(h)
 					paragraph.innerHTML = h;
 					setHTML('zss_editor_content', paragraph);
 					zss_editor.focusEditor('zss_editor_content')
