@@ -1475,7 +1475,7 @@
 					zss_editor.focusEditor('zss_editor_content')
 				}
 
-				return paragraph||h;
+				return (paragraph||h).replace(/<div[^>]*>/g, "<p>").replace(/<\/div[^>]*>/g, "</p>");
 			}
 
 			zss_editor.getTitleHTML = function() {
