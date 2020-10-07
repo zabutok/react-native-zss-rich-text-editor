@@ -31,9 +31,9 @@ export const MessageConverter = (action) => {
       return `zss_editor.setItalic();`;
     case `${actions.setUnderline}`:
       return `zss_editor.setUnderline();`;
-    case '${actions.undo}':
+    case `${actions.undo}`:
       return `zss_editor.undo('${action.data}');`;
-    case '${actions.redo}':
+    case `${actions.redo}`:
       return `zss_editor.redo('${action.data}');`;
     case `${actions.heading1}`:
       return `zss_editor.setHeading('h1');`;
