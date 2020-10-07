@@ -133,7 +133,7 @@ export default class RichTextToolbar extends Component {
           horizontal={true}
           contentContainerStyle={{flexDirection: 'row',flex: 1, justifyContent:'center'}}
           data={this.state.ds}
-          renderRow= {({ item: row }) => this._renderAction(row.action, row.selected)}
+          renderItem= {({ item: row }) => this._renderAction(row.action, row.selected)}
         />
       </View>
     );
