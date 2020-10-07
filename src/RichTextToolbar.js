@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import {ListView, View, TouchableOpacity, Image, StyleSheet} from 'react-native';
+import {FlatList, View, TouchableOpacity, Image, StyleSheet} from 'react-native';
 import {actions} from './const';
 
 const defaultActions = [
@@ -49,7 +49,7 @@ export default class RichTextToolbar extends Component {
       editor: undefined,
       selectedItems: [],
       actions,
-      ds: new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2}).cloneWithRows(this.getRows(actions, []))
+      ds: this.getRows(actions, [])
     };
   }
 
@@ -57,7 +57,7 @@ export default class RichTextToolbar extends Component {
     const actions = newProps.actions ? newProps.actions : defaultActions;
     this.setState({
       actions,
-      ds: this.state.ds.cloneWithRows(this.getRows(actions, this.state.selectedItems))
+      ds: this.getRows(this.state.actions, selectedItems)
     });
   }
 
@@ -79,7 +79,7 @@ export default class RichTextToolbar extends Component {
     if (selectedItems !== this.state.selectedItems) {
       this.setState({
         selectedItems,
-        ds: this.state.ds.cloneWithRows(this.getRows(this.state.actions, selectedItems))
+        ds: this.getRows(this.state.actions, selectedItems)
       });
     }
   }
@@ -129,11 +129,11 @@ export default class RichTextToolbar extends Component {
       <View
         style={[{height: 50, backgroundColor: '#D3D3D3', alignItems: 'center'}, this.props.style]}
       >
-        <ListView
-          horizontal
+        <FlatList
+          horizontal={true}
           contentContainerStyle={{flexDirection: 'row',flex: 1, justifyContent:'center'}}
-          dataSource={this.state.ds}
-          renderRow= {(row) => this._renderAction(row.action, row.selected)}
+          data={this.state.ds}
+          renderRow= {({ item: row }) => this._renderAction(row.action, row.selected)}
         />
       </View>
     );
