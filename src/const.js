@@ -14,6 +14,7 @@ export const actions = {
   focusTitle: 'FOCUS_TITLE',
   focusContent: 'FOCUS_CONTENT',
 
+  fontSize: 'font-size',
   setBold: 'bold',
   setItalic: 'italic',
   setUnderline: 'underline',

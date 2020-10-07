@@ -49,16 +49,8 @@ export default class RichTextToolbar extends Component {
       editor: undefined,
       selectedItems: [],
       actions,
-      ds: this.getRows(actions, [])
+      dataSet: this.getRows(actions, [])
     };
-  }
-
-  componentDidReceiveProps(newProps) {
-    const actions = newProps.actions ? newProps.actions : defaultActions;
-    this.setState({
-      actions,
-      ds: this.getRows(this.state.actions, selectedItems)
-    });
   }
 
   getRows(actions, selectedItems) {
@@ -79,7 +71,7 @@ export default class RichTextToolbar extends Component {
     if (selectedItems !== this.state.selectedItems) {
       this.setState({
         selectedItems,
-        ds: this.getRows(this.state.actions, selectedItems)
+        dataSet: this.getRows(this.state.actions, selectedItems)
       });
     }
   }
@@ -108,7 +100,7 @@ export default class RichTextToolbar extends Component {
       <TouchableOpacity
         key={action}
         style={[
-          {height: '100%', flex: 1, justifyContent:'center',alignItems: 'center'},
+          {height: 50, width: 50, justifyContent: 'center'},
           selected ? this._getButtonSelectedStyle() : this._getButtonUnselectedStyle()
         ]}
         onPress={() => this._onPress(action)}
@@ -130,10 +122,9 @@ export default class RichTextToolbar extends Component {
         style={[{height: 50, backgroundColor: '#D3D3D3', alignItems: 'center'}, this.props.style]}
       >
         <FlatList
-          horizontal={true}
-          contentContainerStyle={{flexDirection: 'row',flex: 1, justifyContent:'center'}}
-          data={this.state.ds}
-          renderItem= {({ item: row }) => this._renderAction(row.action, row.selected)}
+          data={this.state.dataSet}
+          numColumns={this.state.actions.length}
+          renderItem={(item) => this._renderAction(item.item.action, item.item.selected)}
         />
       </View>
     );
