@@ -57,7 +57,6 @@ export const actions = {
   insertHR:'insertHR',
   undo: 'undo',
   redo: 'redo',
-  fontSize: 'font-size',
   font: 'font',
 };
 
