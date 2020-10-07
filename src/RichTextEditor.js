@@ -1,22 +1,26 @@
-import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import WebViewBridge from 'react-native-webview-bridge-updated';
-import {InjectedMessageHandler} from './WebviewMessageHandler';
-import {actions, messages} from './const';
-import {Modal, View, Text, StyleSheet, TextInput, TouchableOpacity, Platform, PixelRatio, Keyboard, Dimensions} from 'react-native';
+import React, { Component } from 'react';
+import {
+  Modal,
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Platform,
+  PixelRatio,
+  Keyboard,
+  Dimensions,
+} from 'react-native';
+import WebView from 'react-native-webview';
 
-const injectScript = `
-  (function () {
-    ${InjectedMessageHandler}
-  }());
-`;
+import { actions, messages } from './const';
+import { MessageConverter } from './WebviewMessageHandler';
 
 const PlatformIOS = Platform.OS === 'ios';
 
 export default class RichTextEditor extends Component {
   static propTypes = {
-    initialTitleHTML: PropTypes.string,
-    initialContentHTML: PropTypes.string,
     titlePlaceholder: PropTypes.string,
     contentPlaceholder: PropTypes.string,
     editorInitializedCallback: PropTypes.func,
@@ -24,19 +28,20 @@ export default class RichTextEditor extends Component {
     hiddenTitle: PropTypes.bool,
     enableOnChange: PropTypes.bool,
     footerHeight: PropTypes.number,
-    contentInset: PropTypes.object
+    contentInset: PropTypes.object,
+    autoFocusLinkModal: PropTypes.bool,
   };
 
   static defaultProps = {
     contentInset: {},
-    style: {}
+    style: {},
   };
 
   constructor(props) {
     super(props);
     this._sendAction = this._sendAction.bind(this);
     this.registerToolbar = this.registerToolbar.bind(this);
-    this.onBridgeMessage = this.onBridgeMessage.bind(this);
+    this.onMessage = this.onMessage.bind(this);
     this._onKeyboardWillShow = this._onKeyboardWillShow.bind(this);
     this._onKeyboardWillHide = this._onKeyboardWillHide.bind(this);
     this.state = {
@@ -46,55 +51,75 @@ export default class RichTextEditor extends Component {
       linkInitialUrl: '',
       linkTitle: '',
       linkUrl: '',
-      keyboardHeight: 0
+      linkClassName: '',
+      keyboardHeight: 0,
+      isTitleFocused: false,
+      isContentFocused: false,
     };
     this._selectedTextChangeListeners = [];
   }
 
-  componentWillMount() {
-    if(PlatformIOS) {
+  componentDidMount() {
+    if (PlatformIOS) {
       this.keyboardEventListeners = [
-        Keyboard.addListener('keyboardWillShow', this._onKeyboardWillShow),
-        Keyboard.addListener('keyboardWillHide', this._onKeyboardWillHide)
+        Keyboard.addListener(
+          'keyboardWillShow',
+          this._onKeyboardWillShow,
+        ),
+        Keyboard.addListener(
+          'keyboardWillHide',
+          this._onKeyboardWillHide,
+        ),
       ];
     } else {
       this.keyboardEventListeners = [
-        Keyboard.addListener('keyboardDidShow', this._onKeyboardWillShow),
-        Keyboard.addListener('keyboardDidHide', this._onKeyboardWillHide)
+        Keyboard.addListener(
+          'keyboardDidShow',
+          this._onKeyboardWillShow,
+        ),
+        Keyboard.addListener(
+          'keyboardDidHide',
+          this._onKeyboardWillHide,
+        ),
       ];
     }
   }
 
   componentWillUnmount() {
-    this.keyboardEventListeners.forEach((eventListener) => eventListener.remove());
+    this.keyboardEventListeners.forEach(eventListener =>
+      eventListener.remove(),
+    );
   }
 
   _onKeyboardWillShow(event) {
-    console.log('!!!!', event);
     const newKeyboardHeight = event.endCoordinates.height;
     if (this.state.keyboardHeight === newKeyboardHeight) {
       return;
     }
     if (newKeyboardHeight) {
-      this.setEditorAvailableHeightBasedOnKeyboardHeight(newKeyboardHeight);
+      this.setEditorAvailableHeightBasedOnKeyboardHeight(
+        newKeyboardHeight,
+      );
     }
-    this.setState({keyboardHeight: newKeyboardHeight});
+    this.setState({ keyboardHeight: newKeyboardHeight });
   }
 
   _onKeyboardWillHide(event) {
-    this.setState({keyboardHeight: 0});
+    this.setState({ keyboardHeight: 0 });
   }
 
   setEditorAvailableHeightBasedOnKeyboardHeight(keyboardHeight) {
-    const {top = 0, bottom = 0} = this.props.contentInset;
-    const {marginTop = 0, marginBottom = 0} = this.props.style;
+    const { top = 0, bottom = 0 } = this.props.contentInset;
+    const { marginTop = 0, marginBottom = 0 } = this.props.style;
     const spacing = marginTop + marginBottom + top + bottom;
 
-    const editorAvailableHeight = Dimensions.get('window').height - (keyboardHeight * 2) - spacing;
+    const editorAvailableHeight =
+      Dimensions.get('window').height - keyboardHeight * 2 - spacing;
     this.setEditorHeight(editorAvailableHeight);
   }
 
-  onBridgeMessage(str){
+  onMessage({ nativeEvent }) {
+    const { data: str } = nativeEvent;
     try {
       const message = JSON.parse(str);
 
@@ -149,13 +174,14 @@ export default class RichTextEditor extends Component {
           }
           this.setTitlePlaceholder(this.props.titlePlaceholder);
           this.setContentPlaceholder(this.props.contentPlaceholder);
-          this.setTitleHTML(this.props.initialTitleHTML);
-          this.setContentHTML(this.props.initialContentHTML);
+          this.setTitleHTML(this.props.initialTitleHTML || '');
+          this.setContentHTML(this.props.initialContentHTML || '');
 
           this.props.hiddenTitle && this.hideTitle();
           this.props.enableOnChange && this.enableOnChange();
 
-          this.props.editorInitializedCallback && this.props.editorInitializedCallback();
+          this.props.editorInitializedCallback &&
+          this.props.editorInitializedCallback();
 
           break;
         case messages.LINK_TOUCHED:
@@ -184,19 +210,18 @@ export default class RichTextEditor extends Component {
         }
         case messages.CONTENT_CHANGE: {
           const content = message.data.content;
-          PlatformIOS && this.setEditorAvailableHeightBasedOnKeyboardHeight(this.state.keyboardHeight);
-          this.state.onChange.map((listener) => listener(content));
+          this.state.onChange.map(listener => listener(content));
           break;
         }
         case messages.SELECTED_TEXT_CHANGED: {
           const selectedText = message.data;
-          this._selectedTextChangeListeners.forEach((listener) => {
+          this._selectedTextChangeListeners.forEach(listener => {
             listener(selectedText);
           });
           break;
         }
       }
-    } catch(e) {
+    } catch (e) {
       //alert('NON JSON MESSAGE');
     }
   }
@@ -243,8 +268,8 @@ export default class RichTextEditor extends Component {
       showLinkDialog: false,
       linkInitialUrl: '',
       linkTitle: '',
-      linkUrl: ''
-    })
+      linkUrl: '',
+    });
   }
 
   _renderModalButtons() {
@@ -294,15 +319,17 @@ export default class RichTextEditor extends Component {
     //in release build, external html files in Android can't be required, so they must be placed in the assets folder and accessed via uri
     const pageSource = PlatformIOS ? require('./editor.html') : { uri: 'file:///android_asset/editor.html' };
     return (
-      <View style={{flex: 1}}>
-        <WebViewBridge
+      <View style={{ flex: 1 }}>
+        <WebView
           {...this.props}
           hideKeyboardAccessoryView={true}
-          keyboardDisplayRequiresUserAction={true}
-          ref={(r) => {this.webviewBridge = r}}
-          onBridgeMessage={(message) => this.onBridgeMessage(message)}
-          injectedJavaScript={injectScript}
+          keyboardDisplayRequiresUserAction={false}
+          ref={r => {
+            this.webview = r;
+          }}
+          onMessage={message => this.onMessage(message)}
           source={pageSource}
+          originWhitelist={['*']}
           onLoad={() => this.init()}
         />
         {this._renderLinkModal()}
@@ -324,20 +351,29 @@ export default class RichTextEditor extends Component {
   };
 
   _sendAction(action, data) {
-    let jsonString = JSON.stringify({type: action, data});
-    jsonString = this.escapeJSONString(jsonString);
-    this.webviewBridge.sendToBridge(jsonString);
+    const escapedData =
+      typeof data === 'string' ? this.escapeJSONString(data) : data;
+    const jsToBeExecutedOnPage = MessageConverter({
+      type: action,
+      data: escapedData,
+    });
+    this.webview.injectJavaScript(`${jsToBeExecutedOnPage};true;`);
   }
 
   //-------------------------------------------------------------------------------
   //--------------- Public API
 
-  showLinkDialog(optionalTitle = '', optionalUrl = '') {
+  showLinkDialog(
+    optionalTitle = '',
+    optionalUrl = '',
+    optionalClassName = '',
+  ) {
     this.setState({
       linkInitialUrl: optionalUrl,
       linkTitle: optionalTitle,
       linkUrl: optionalUrl,
-      showLinkDialog: true
+      linkClassName: optionalClassName,
+      showLinkDialog: true,
     });
   }
 
@@ -351,7 +387,10 @@ export default class RichTextEditor extends Component {
 
   registerToolbar(listener) {
     this.setState({
-      selectionChangeListeners: [...this.state.selectionChangeListeners, listener]
+      selectionChangeListeners: [
+        ...this.state.selectionChangeListeners,
+        listener,
+      ],
     });
   }
 
@@ -361,22 +400,26 @@ export default class RichTextEditor extends Component {
 
   registerContentChangeListener(listener) {
     this.setState({
-      onChange: [...this.state.onChange, listener]
+      onChange: [...this.state.onChange, listener],
     });
   }
 
   setTitleHTML(html) {
     this._sendAction(actions.setTitleHtml, html);
   }
+
   hideTitle() {
     this._sendAction(actions.hideTitle);
   }
+
   showTitle() {
     this._sendAction(actions.showTitle);
   }
+
   toggleTitle() {
     this._sendAction(actions.toggleTitle);
   }
+
   setContentHTML(html) {
     this._sendAction(actions.setContentHtml, html);
   }
@@ -477,12 +520,12 @@ export default class RichTextEditor extends Component {
     this._sendAction(actions.insertOrderedList);
   }
 
-  insertLink(url, title) {
-    this._sendAction(actions.insertLink, {url, title});
+  insertLink(url, title, className) {
+    this._sendAction(actions.insertLink, { url, title, className });
   }
 
-  updateLink(url, title) {
-    this._sendAction(actions.updateLink, {url, title});
+  updateLink(url, title, className) {
+    this._sendAction(actions.updateLink, { url, title, className });
   }
 
   insertImage(attributes) {
@@ -570,7 +613,7 @@ export default class RichTextEditor extends Component {
 
       this.pendingTitleHtml = setTimeout(() => {
         if (this.titleReject) {
-          this.titleReject('timeout')
+          this.titleReject('timeout');
         }
       }, 5000);
     });
@@ -598,7 +641,7 @@ export default class RichTextEditor extends Component {
 
       this.pendingContentHtml = setTimeout(() => {
         if (this.contentReject) {
-          this.contentReject('timeout')
+          this.contentReject('timeout');
         }
       }, 5000);
     });
@@ -612,7 +655,7 @@ export default class RichTextEditor extends Component {
 
       this.pendingSelectedText = setTimeout(() => {
         if (this.selectedTextReject) {
-          this.selectedTextReject('timeout')
+          this.selectedTextReject('timeout');
         }
       }, 5000);
     });
@@ -638,7 +681,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)'
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   innerModal: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -648,31 +691,32 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     alignSelf: 'stretch',
     margin: 40,
-    borderRadius: PlatformIOS ? 8 : 2
+    borderRadius: PlatformIOS ? 8 : 2,
   },
   button: {
     fontSize: 16,
     color: '#4a4a4a',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   inputWrapper: {
     marginTop: 5,
     marginBottom: 10,
     borderBottomColor: '#4a4a4a',
-    borderBottomWidth: PlatformIOS ? 1 / PixelRatio.get() : 0
+    borderBottomWidth: PlatformIOS ? 1 / PixelRatio.get() : 0,
   },
   inputTitle: {
-    color: '#4a4a4a'
+    color: '#4a4a4a',
   },
   input: {
     height: PlatformIOS ? 20 : 40,
-    paddingTop: 0
+    paddingTop: 0,
+    color: 'black',
   },
   lineSeparator: {
     height: 1 / PixelRatio.get(),
     backgroundColor: '#d5d5d5',
     marginLeft: -20,
     marginRight: -20,
-    marginTop: 20
-  }
+    marginTop: 20,
+  },
 });
