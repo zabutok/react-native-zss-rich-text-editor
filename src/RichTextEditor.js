@@ -300,10 +300,12 @@ export default class RichTextEditor extends Component {
           {...this.props}
           hideKeyboardAccessoryView={true}
           keyboardDisplayRequiresUserAction={false}
-          ref={(r) => {this.webview = r}}
-          onMessage={(message) => this.onMessage(message)}
-          // injectedJavaScript={injectScript}
+          ref={r => {
+            this.webview = r;
+          }}
+          onMessage={message => this.onMessage(message)}
           source={pageSource}
+          originWhitelist={['*']}
           onLoad={() => this.init()}
         />
         {this._renderLinkModal()}
